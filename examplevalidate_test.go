@@ -18,6 +18,7 @@ package validator_test
 
 import (
 	"fmt"
+	"sort"
 
 	"gopkg.in/validator.v2"
 )
@@ -50,10 +51,11 @@ func ExampleValidate() {
 	ve.Address.City = "Some City" // valid
 	ve.Address.Street = ""        // invalid
 
-	valid, errs := validator.Validate(ve)
-	if valid {
+	err := validator.Validate(ve)
+	if err == nil {
 		fmt.Println("Values are valid.")
 	} else {
+		errs := err.(validator.ErrorMap)
 		// See if Address was empty
 		if errs["Address.Street"][0] == validator.ErrZeroValue {
 			fmt.Println("Street cannot be empty.")
@@ -61,35 +63,47 @@ func ExampleValidate() {
 
 		// Iterate through the list of fields and respective errors
 		fmt.Println("Invalid due to fields:")
+
+		// Here we have to sort the arrays to ensure map ordering does not
+		// fail our example, typically it's ok to just range through the err
+		// list when order is not important.
+		var errOuts []string
 		for f, e := range errs {
-			fmt.Printf("\t - %s (%v)\n", f, e)
+			errOuts = append(errOuts, fmt.Sprintf("\t - %s (%v)\n", f, e))
+		}
+
+		// Again this part is extraneous and you should not need this in real
+		// code.
+		sort.Strings(errOuts)
+		for _, str := range errOuts {
+			fmt.Print(str)
 		}
 	}
 
 	// Output:
 	// Street cannot be empty.
 	// Invalid due to fields:
-	//	 - Age ([less than min])
-	//	 - Email ([regular expression mismatch])
-	//	 - Address.Street ([zero value])
+	//	 - Address.Street (zero value)
+	// 	 - Age (less than min)
+	// 	 - Email (regular expression mismatch)
 }
 
 // This example shows how to use the Valid helper
 // function to validator any number of values
 func ExampleValid() {
-	valid, errs := validator.Valid(42, "min=10,max=100,nonzero")
-	fmt.Printf("42: valid=%v, errs=%v\n", valid, errs)
+	err := validator.Valid(42, "min=10,max=100,nonzero")
+	fmt.Printf("42: valid=%v, errs=%v\n", err == nil, err)
 
 	var ptr *int
-	if valid, _ := validator.Valid(ptr, "nonzero"); !valid {
+	if err := validator.Valid(ptr, "nonzero"); err != nil {
 		fmt.Println("ptr: Invalid nil pointer.")
 	}
 
-	valid, _ = validator.Valid("ABBA", "regexp=[ABC]*")
-	fmt.Printf("ABBA: valid=%v\n", valid)
+	err = validator.Valid("ABBA", "regexp=[ABC]*")
+	fmt.Printf("ABBA: valid=%v\n", err == nil)
 
 	// Output:
-	// 42: valid=true, errs=[]
+	// 42: valid=true, errs=<nil>
 	// ptr: Invalid nil pointer.
 	// ABBA: valid=true
 }
@@ -102,15 +116,16 @@ func ExampleSetTag() {
 	t := T{5}
 	v := validator.NewValidator()
 	v.SetTag("foo")
-	valid, errs := v.Validate(t)
-	fmt.Printf("foo --> valid: %v, errs: %v\n", valid, errs)
+	err := v.Validate(t)
+	fmt.Printf("foo --> valid: %v, errs: %v\n", err == nil, err)
 	v.SetTag("bar")
-	valid, errs = v.Validate(t)
-	fmt.Printf("bar --> valid: %v, errs: %v\n", valid, errs)
+	err = v.Validate(t)
+	errs := err.(validator.ErrorMap)
+	fmt.Printf("bar --> valid: %v, errs: %v\n", err == nil, errs)
 
 	// Output:
-	// foo --> valid: true, errs: map[]
-	// bar --> valid: false, errs: map[A:[less than min]]
+	// foo --> valid: true, errs: <nil>
+	// bar --> valid: false, errs: A: less than min
 }
 
 // This example shows you how to change the tag name
@@ -119,12 +134,12 @@ func ExampleWithTag() {
 		A int `foo:"nonzero" bar:"min=10"`
 	}
 	t := T{5}
-	valid, errs := validator.WithTag("foo").Validate(t)
-	fmt.Printf("foo --> valid: %v, errs: %v\n", valid, errs)
-	valid, errs = validator.WithTag("bar").Validate(t)
-	fmt.Printf("bar --> valid: %v, errs: %v\n", valid, errs)
+	err := validator.WithTag("foo").Validate(t)
+	fmt.Printf("foo --> valid: %v, errs: %v\n", err == nil, err)
+	err = validator.WithTag("bar").Validate(t)
+	fmt.Printf("bar --> valid: %v, errs: %v\n", err == nil, err)
 
 	// Output:
-	// foo --> valid: true, errs: map[]
-	// bar --> valid: false, errs: map[A:[less than min]]
+	// foo --> valid: true, errs: <nil>
+	// bar --> valid: false, errs: A: less than min
 }
