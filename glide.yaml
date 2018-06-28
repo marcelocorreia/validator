@@ -1,4 +1,0 @@
-package: github.com/marcelocorreia/validator
-import: []
-testImport:
-- package: gopkg.in/check.v1
