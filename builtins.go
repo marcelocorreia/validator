@@ -269,3 +269,26 @@ func asFloat(param string) (float64, error) {
 	}
 	return i, nil
 }
+
+func regexpMap(obj interface{}, regex string) error {
+	for _, v := range obj.(map[string]string) {
+
+		res, err := regexp.MatchString(regex, v)
+		if err != nil || !res {
+			return ErrRegexp
+		}
+
+	}
+	return nil
+}
+
+func regexpSlice(obj interface{}, regex string) error {
+	for _, o := range obj.([]string) {
+
+		res, err := regexp.MatchString(regex, o)
+		if err != nil || !res {
+			return ErrRegexp
+		}
+	}
+	return nil
+}

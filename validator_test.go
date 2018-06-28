@@ -21,7 +21,8 @@ import (
 	"testing"
 
 	. "gopkg.in/check.v1"
-	"gopkg.in/validator.v2"
+
+	"github.com/marcelocorreia/validator"
 )
 
 func Test(t *testing.T) {
@@ -49,16 +50,20 @@ func (this *Impl) Foo() string {
 }
 
 type TestStruct struct {
-	A   int    `validate:"nonzero"`
-	B   string `validate:"len=8,min=6,max=4"`
+	A int    `validate:"nonzero"`
+	B string `validate:"len=8,min=6,max=4"`
 	Sub struct {
-		A int `validate:"nonzero"`
+		A int     `validate:"nonzero"`
 		B string
 		C float64 `validate:"nonzero,min=1"`
 		D *string `validate:"nonzero"`
 	}
-	D *Simple `validate:"nonzero"`
-	E I       `validate:nonzero`
+	D *Simple           `validate:"nonzero"`
+	E I                 `validate:nonzero`
+	F []string          `validate:"regexpSlice=^[a-zA-z]"`
+	G map[string]string `validate:"regexpMap=^[a-zA-z]"`
+	H []string          `validate:"regexpSlice=^[a-zA-z]"`
+	I map[string]string `validate:"regexpMap=^[a-zA-z]"`
 }
 
 func (ms *MySuite) TestValidate(c *C) {
@@ -71,7 +76,14 @@ func (ms *MySuite) TestValidate(c *C) {
 	t.Sub.C = 0.0
 	t.D = &Simple{10}
 	t.E = &Impl{"hello"}
-
+	t.F = []string{"hello"}
+	t.G = make(map[string]string)
+	t.G["hey"] = "ho"
+	t.G["lets"] = "go"
+	t.H = []string{"123hello"}
+	t.I = make(map[string]string)
+	t.I["hey"] = "123ho"
+	t.I["lets"] = "123go"
 	err := validator.Validate(t)
 	c.Assert(err, NotNil)
 
@@ -86,6 +98,11 @@ func (ms *MySuite) TestValidate(c *C) {
 	c.Assert(errs["Sub.C"], HasLen, 2)
 	c.Assert(errs["Sub.D"], HasError, validator.ErrZeroValue)
 	c.Assert(errs["E.F"], HasError, validator.ErrLen)
+	c.Assert(errs["E"], IsNil)
+	c.Assert(errs["F"], IsNil)
+	c.Assert(errs["G"], IsNil)
+	c.Assert(errs["H"], HasError,validator.ErrRegexp)
+	c.Assert(errs["I"], HasError,validator.ErrRegexp)
 }
 
 func (ms *MySuite) TestValidSlice(c *C) {
@@ -108,6 +125,7 @@ func (ms *MySuite) TestValidSlice(c *C) {
 	c.Assert(errs, HasError, validator.ErrMax)
 	c.Assert(errs, HasError, validator.ErrLen)
 	c.Assert(errs, Not(HasError), validator.ErrZeroValue)
+
 }
 
 func (ms *MySuite) TestValidMap(c *C) {

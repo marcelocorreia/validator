@@ -122,11 +122,13 @@ func NewValidator() *Validator {
 	return &Validator{
 		tagName: "validate",
 		validationFuncs: map[string]ValidationFunc{
-			"nonzero": nonzero,
-			"len":     length,
-			"min":     min,
-			"max":     max,
-			"regexp":  regex,
+			"nonzero":     nonzero,
+			"len":         length,
+			"min":         min,
+			"max":         max,
+			"regexp":      regex,
+			"regexpSlice": regexpSlice,
+			"regexpMap":   regexpMap,
 		},
 	}
 }
