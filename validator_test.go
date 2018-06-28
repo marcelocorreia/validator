@@ -21,7 +21,7 @@ import (
 
 	. "gopkg.in/check.v1"
 
-	"gopkg.in/validator.v2"
+	"github.com/marcelocorreia/validator"
 )
 
 func Test(t *testing.T) {
