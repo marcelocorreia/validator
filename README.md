@@ -1,5 +1,10 @@
 Package validator
-================
+=================
+
+Forked from forked from https://github.com/go-validator/validator. Thanks guys great work
+
+Added regexp Validation for ```[]string``` and ```map[string]string``` on top of the original code.
+
 
 Package validator implements variable validations
 
@@ -9,14 +14,14 @@ Installation
 Just use go get.
 
 ```bash
-go get gopkg.in/validator.v2
+go get github.com/marcelocorreia/validator
 ```
 
 And then just import the package into your own code.
 
 ```go
 import (
-	"gopkg.in/validator.v2"
+	"github.com/marcelocorreia/validator"
 )
 ```
 
@@ -32,6 +37,8 @@ type NewUserRequest struct {
 	Name string     `validate:"nonzero"`
 	Age int         `validate:"min=21"`
 	Password string `validate:"min=8"`
+	Children map[string]string `validate:"regexpMap=^[a-zA-Z]*$"`
+	DVDs []string `validate:"regexpSlice=^[a-zA-Z]*$"`
 }
 
 nur := NewUserRequest{Username: "something", Age: 20}
@@ -79,9 +86,8 @@ nonzero
 	keys that you care about. (Usage: nonzero)
 
 regexp
-	Only valid for string types, it will validator that the
-	value matches the regular expression provided as parameter.
-	(Usage: regexp=^a.*b$)
+	It will validator that the	value matches the regular expression provided as parameter.
+	(Usage: regexp=^a.*b$ for strings, regexpSlice=^a.*b$ for []string for and  regexpMap=^a.*b$ for map[string]string)
 ```
 
 Custom validators
